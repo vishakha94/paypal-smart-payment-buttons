@@ -6,7 +6,6 @@ import { COUNTRY, LANG } from '@paypal/sdk-constants';
 import { clientErrorResponse, htmlResponse, allowFrame, defaultLogger, safeJSON, sdkMiddleware, type ExpressMiddleware, graphQLBatch, type GraphQL, javascriptResponse } from '../../lib';
 import { renderFraudnetScript, shouldRenderFraudnet, resolveFundingEligibility, resolvePersonalization, resolveNativeEligibility, resolveMerchantID, type GetWallet, resolveWallet, exchangeIDToken } from '../../service';
 import type { LoggerType, CacheType, ExpressRequest, FirebaseConfig, RiskData } from '../../types';
-import { AUTH_ERROR_CODE } from '../../config';
 import type { ContentType } from '../../../src/types';
 
 import { getSmartPaymentButtonsClientScript, getPayPalSmartPaymentButtonsRenderScript } from './script';
