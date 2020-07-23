@@ -104,8 +104,7 @@ export function getButtonMiddleware({ logger = defaultLogger, content: smartCont
             try {
                 facilitatorAccessToken = await facilitatorAccessTokenPromise;
             } catch (err) {
-                if ((err && err.code === AUTH_ERROR_CODE.INVALID_CLIENT) || (err && err.statusCode >= 400 && err.statusCode < 500)) {
-                    // mapping all 4xx to invalid client id to avoid exposing specific errors
+                if (err && err.statusCode && err.statusCode >= 400 && err.statusCode < 500) {
                     return clientErrorResponse(res, 'Invalid clientID');
                 }
 
@@ -181,4 +180,3 @@ export function getButtonMiddleware({ logger = defaultLogger, content: smartCont
         }
     });
 }
-
