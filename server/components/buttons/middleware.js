@@ -46,6 +46,7 @@ type ButtonMiddlewareOptions = {|
 export function getButtonMiddleware({ logger = defaultLogger, content: smartContent, graphQL, getAccessToken, getMerchantID, cache, getInlineGuestExperiment = () => Promise.resolve(false), firebaseConfig, getWallet, transportRiskData, tracking } : ButtonMiddlewareOptions = {}) : ExpressMiddleware {
     return sdkMiddleware({ logger, cache }, {
         app: async ({ req, res, params, meta, logBuffer, sdkMeta }) => {
+            console.log('Alias: spb server side');
             logger.info(req, EVENT.RENDER);
             
             tracking(req);
@@ -131,7 +132,7 @@ export function getButtonMiddleware({ logger = defaultLogger, content: smartCont
                 ...params, nonce: cspNonce, csp: { nonce: cspNonce },
                 fundingEligibility, content, wallet, enablePWB
             };
-            console.log('The button props are: ', buttonProps);
+            console.log('Alias: The button props are: ', buttonProps);
 
             try {
                 if (render.button.validateButtonProps) {
