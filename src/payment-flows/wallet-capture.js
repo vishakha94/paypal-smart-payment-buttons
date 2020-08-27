@@ -37,6 +37,10 @@ function isWalletCaptureEligible({ props, serviceData } : IsEligibleOptions) : b
     if (window.xprops.enableBNPL) {
         return false;
     }
+    
+    if (window.xprops.enablePWB) {
+        return false;
+    }
 
 
     return true;
