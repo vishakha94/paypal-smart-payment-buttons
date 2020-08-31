@@ -11,11 +11,13 @@ import { DATA_ATTRIBUTES, BUYER_INTENT } from '../constants';
 import { type Payment } from '../payment-flows';
 
 import { getProps, getConfig, getComponents, getServiceData, type ServerRiskData, type ButtonProps } from './props';
-import { getSelectedFunding, getButtons, getMenuButton } from './dom';
+import { getSelectedFunding, getButtons, getMenuButton, getWalletButton } from './dom';
 import { setupButtonLogger } from './logger';
 import { setupRemember } from './remember';
-import { setupPaymentFlows, initiatePaymentFlow, initiateMenuFlow } from './pay';
+import { setupPaymentFlows, initiatePaymentFlow, initiateMenuFlow, initiateWalletFlow } from './pay';
 import { prerenderMenu, clearSmartMenu } from './menu';
+import { prerenderWallet, clearSmartWallet } from './wallet';
+
 import { validateProps } from './validation';
 
 type ButtonOpts = {|
@@ -73,7 +75,7 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
     const props = getProps({ facilitatorAccessToken });
     const { env, sessionID, partnerAttributionID, commit, sdkCorrelationID, locale,
         buttonSessionID, merchantDomain, onInit, getPrerenderDetails, rememberFunding,
-        style, persistRiskData, fundingSource, intent, createBillingAgreement, createSubscription } = props;
+        style, persistRiskData, fundingSource, intent, createBillingAgreement, createSubscription, enablePWB } = props;
         
     const config = getConfig({ serverCSPNonce, firebaseConfig });
     const { version } = config;
@@ -142,12 +144,37 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
             throw err;
         });
     }
+    
+    function initiateWallet() {
+        return ZalgoPromise.try(() => {
+            if (paymentProcessing) {
+                return;
+            }
+        
+            if (isEnabled()) {
+                return initiateWalletFlow({ payment, config, serviceData, components, props });
+            }
+        }).catch(err => {
+            getLogger()
+                .info('smart_buttons_initiate_wallet_error', { err: stringifyError(err) })
+                .track({
+                    [FPTI_KEY.ERROR_CODE]: 'smart_buttons_initiate_wallet_error',
+                    [FPTI_KEY.ERROR_DESC]: stringifyErrorMessage(err)
+                });
+        
+            throw err;
+        });
+    }
 
     clearSmartMenu();
+    
+    clearSmartWallet();
     
     getButtons().forEach(button => {
         console.log('button: ', button);
         const menuToggle = getMenuButton(button);
+        
+        const pwb = getWalletButton(button);
         const { fundingSource: paymentFundingSource, card, paymentMethodID, instrumentID, instrumentType } = getSelectedFunding(button);
 
         const payment = { button, menuToggle, fundingSource: paymentFundingSource, card, paymentMethodID, instrumentID, instrumentType, isClick: true, buyerIntent: BUYER_INTENT.PAY };
@@ -166,16 +193,33 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
 
         if (menuToggle) {
             console.log('prerendering menu');
+            // Q: why prerendering menu?
             prerenderMenu({ props, components });
 
             onElementClick(menuToggle, (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-
+    
                 const menuPromise = initiateMenu({ payment });
-
+    
                 // $FlowFixMe
                 button.menuPromise = menuPromise;
+            });
+        }
+    
+        if (pwb) {
+               console.log('rendering pwb');
+               prerenderWallet({ props, components });
+        
+            onElementClick(pwb, (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+    
+                const walletPromise = initiateWallet({ payment });
+    
+                // $FlowFixMe
+                // Q: why attaching promise to button?
+                button.walletPromise = walletPromise;
             });
         }
     });

@@ -13,6 +13,9 @@ import { type ButtonProps, type Config, type ServiceData, type Components } from
 import { enableLoadingSpinner, disableLoadingSpinner } from './dom';
 import { validateOrder } from './validation';
 import { renderMenu } from './menu';
+import { renderWallet } from './wallet';
+
+import { renderSmartWallet } from '../wallet/interface';
 
 const PAYMENT_FLOWS : $ReadOnlyArray<PaymentFlow> = [
     vaultCapture,
@@ -174,5 +177,45 @@ export function initiateMenuFlow({ payment, serviceData, config, components, pro
         });
 
         return renderMenu({ props, payment, components, choices });
+    });
+}
+
+export function initiateWalletFlow({ payment, serviceData, config, components, props } : InitiateMenuOptions) : ZalgoPromise<void> {
+    return ZalgoPromise.try(() => {
+        const { fundingSource, button } = payment;
+        
+        const { name, setupWallet } = getPaymentFlow({ props, payment, config, components, serviceData });
+        
+        if (!setupWallet) {
+            throw new Error(`${ name } does not support wallet`);
+        }
+        
+        // Q: why is this logging for menu_click? Has it been clicked yet?
+        // getLogger().info(`menu_click`).info(`pay_flow_${ name }`).track({
+        //     [FPTI_KEY.TRANSITION]:     FPTI_TRANSITION.MENU_CLICK,
+        //     [FPTI_KEY.CHOSEN_FUNDING]: fundingSource,
+        //     [FPTI_KEY.PAYMENT_FLOW]:   name
+        // }).flush();
+        
+        // const choices = setupWallet({ props, payment, serviceData, components, config }).map(choice => {
+        //     return {
+        //         ...choice,
+        //         onSelect: (...args) => {
+        //             if (choice.spinner) {
+        //                 enableLoadingSpinner(button);
+        //             }
+        //
+        //             return ZalgoPromise.try(() => {
+        //                 return choice.onSelect(...args);
+        //             }).then(() => {
+        //                 if (choice.spinner) {
+        //                     disableLoadingSpinner(button);
+        //                 }
+        //             });
+        //         }
+        //     };
+        // });
+        
+        return renderWallet({ props, payment, components });
     });
 }

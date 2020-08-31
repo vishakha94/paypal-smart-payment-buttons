@@ -5,10 +5,9 @@ import { stringifyError } from 'belter/src';
 import { FUNDING, WALLET_INSTRUMENT, FPTI_KEY } from '@paypal/sdk-constants/src';
 
 import type { MenuChoices, Wallet, WalletInstrument } from '../types';
-import { getSupplementalOrderInfo, oneClickApproveOrder, loadFraudnet, getSmartWallet } from '../api';
+import { getSupplementalOrderInfo, oneClickApproveOrder, loadFraudnet, getSmartWallet, updateButtonClientConfig } from '../api';
 import { BUYER_INTENT, FPTI_TRANSITION } from '../constants';
 import { getLogger } from '../lib';
-import { updateButtonClientConfig } from '../button/orders';
 
 import type { PaymentFlow, PaymentFlowInstance, SetupOptions, IsEligibleOptions, IsPaymentEligibleOptions, InitOptions, MenuOptions, Payment } from './types';
 import { checkout, CHECKOUT_POPUP_DIMENSIONS } from './checkout';
@@ -35,6 +34,8 @@ function isWalletEligible({ props, serviceData } : IsEligibleOptions) : boolean 
 
 let smartWalletPromise;
 
+// Q: Why do we have this function?
+/*
 function setupWallet({ props, config, serviceData } : SetupOptions) {
     const { env, sessionID, clientID, currency, amount, userAccessToken, enablePWB, clientMetadataID: cmid } = props;
     const { cspNonce } = config;
@@ -53,6 +54,7 @@ function setupWallet({ props, config, serviceData } : SetupOptions) {
         smartWalletPromise = ZalgoPromise.resolve(wallet);
     }
 }
+*/
 
 function getInstrument(wallet : Wallet, fundingSource : $Values<typeof FUNDING>, instrumentID : string) : WalletInstrument {
     
@@ -226,7 +228,7 @@ const POPUP_OPTIONS = {
     height: CHECKOUT_POPUP_DIMENSIONS.HEIGHT
 };
 
-function setupWalletMenu({ props, payment, serviceData, components, config } : MenuOptions) : MenuChoices {
+function setupWallet({ props, payment, serviceData, components, config } : MenuOptions) : MenuChoices {
     const { createOrder } = props;
     const { fundingSource, instrumentID } = payment;
     const { wallet, content } = serviceData;
@@ -318,7 +320,7 @@ export const walletPWB : PaymentFlow = {
     isEligible:         isWalletEligible,
     isPaymentEligible:  isWalletPaymentEligible,
     init:               initWallet,
-    setupMenu:          setupWalletMenu,
+    setupWallet:        setupWallet,
     updateClientConfig: updateWalletClientConfig,
     spinner:            true,
     inline:             true
