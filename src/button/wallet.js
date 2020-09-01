@@ -30,7 +30,7 @@ export function prerenderWallet({ props, components } : {| props : ButtonProps, 
     smartWallet = smartWallet || renderSmartWallet({ clientID, Wallet });
 }
 
-export function renderWallet({ props, payment, components, choices } : ButtonDropdownProps) : ZalgoPromise<void> {
+export function renderWallet({ props, payment, components } : ButtonDropdownProps) : ZalgoPromise<void> {
     const { clientID } = props;
     const { button } = payment;
     const { Wallet } = components;
@@ -65,6 +65,7 @@ export function renderWallet({ props, payment, components, choices } : ButtonDro
     // };
     
     
+    console.log('inside render wallet');
     return smartWallet.display({
         clientID,
         verticalOffset

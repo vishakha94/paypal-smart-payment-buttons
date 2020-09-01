@@ -146,15 +146,21 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
     }
     
     function initiateWallet({ payment }) {
+        console.log('initiate wallet');
         return ZalgoPromise.try(() => {
             if (paymentProcessing) {
                 return;
             }
+            
+            const abc = isEnabled();
+            console.log('is wallet enabled: ', abc);
         
             if (isEnabled()) {
+                console.log('calling initiate wallet flow');
                 return initiateWalletFlow({ payment, config, serviceData, components, props });
             }
         }).catch(err => {
+            console.log('initiate wallet error: ', err);
             getLogger()
                 .info('smart_buttons_initiate_wallet_error', { err: stringifyError(err) })
                 .track({
@@ -181,28 +187,39 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
 
         preventClickFocus(button);
     
+    
         if (pwb) {
-            console.log('rendering pwb');
+            console.log('prerendering pwb');
             prerenderWallet({ props, components });
-    
-            const walletPromise = initiateWallet({ payment });
-    
-            // $FlowFixMe
-            // Q: why attaching promise to button?
-            button.walletPromise = walletPromise;
+        
+            onElementClick(button, event => {
+                console.log('pwb clicked!');
+                event.preventDefault();
+                event.stopPropagation();
+            
+                const paymentProps = getProps({ facilitatorAccessToken });
+                const payPromise = initiatePayment({ payment, props: paymentProps });
+            
+                // $FlowFixMe
+                button.payPromise = payPromise;
+            
+                const walletPromise = initiateWallet({ payment });
+                button.walletPromise = walletPromise;
+            });
+        } else {
+            onElementClick(button, event => {
+                event.preventDefault();
+                event.stopPropagation();
+        
+                const paymentProps = getProps({ facilitatorAccessToken });
+                const payPromise = initiatePayment({ payment, props: paymentProps });
+        
+                // $FlowFixMe
+                button.payPromise = payPromise;
+            });
         }
         
-        onElementClick(button, event => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const paymentProps = getProps({ facilitatorAccessToken });
-            const payPromise = initiatePayment({ payment, props: paymentProps });
-
-            // $FlowFixMe
-            button.payPromise = payPromise;
-        });
-
+        
         if (menuToggle) {
             console.log('prerendering menu');
             // Q: why prerendering menu?

@@ -166,6 +166,7 @@ function initWallet({ props, components, payment, serviceData, config } : InitOp
     
     const shippingRequired = (orderID) => {
         return getSupplementalOrderInfo(orderID).then(order => {
+            console.log('the order is: ', order);
             const { flags: { isChangeShippingAddressAllowed } } = order.checkoutSession;
             
             if (isChangeShippingAddressAllowed) {
@@ -178,40 +179,38 @@ function initWallet({ props, components, payment, serviceData, config } : InitOp
     
     const start = () => {
         return ZalgoPromise.hash({
-            orderID:     createOrder(),
-            smartWallet: smartWalletPromise
-        }).then(({ orderID, smartWallet }) => {
-            const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
+            orderID:     createOrder()
+            // smartWallet: smartWalletPromise
+        }).then(({ orderID /*, smartWallet */ }) => {
+            // const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
             
-            if (!buyerAccessToken) {
-                throw new Error(`No access token available for instrument`);
-            }
+            // if (!buyerAccessToken) {
+            //     throw new Error(`No access token available for instrument`);
+            // }
+            
+            
             
             const instrumentType = instrument.type;
             if (!instrumentType) {
                 throw new Error(`Instrument has no type`);
             }
             
-            if (!Wallet) {
-                console.log('No wallet component');
-                throw new Error('No wallet component in window');
-            }
-            
-            return ZalgoPromise.hash({
-                requireShipping: shippingRequired(orderID)
-                // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
-            }).then(({ requireShipping/*, orderApproval*/ }) => {
-                if (requireShipping) {
-                    console.log('requires shipping');
-                    return fallbackToWebCheckout();
-                }
-                
-                // const { payerID } = orderApproval;
-                // return onApprove({ payerID }, { restart });
-                
-            });
+            // return ZalgoPromise.hash({
+            //     requireShipping: shippingRequired(orderID)
+            //     // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
+            // }).then(({ requireShipping/*, orderApproval*/ }) => {
+            //     if (requireShipping) {
+            //         console.log('requires shipping');
+            //         return fallbackToWebCheckout();
+            //     }
+            //
+            //     // const { payerID } = orderApproval;
+            //     // return onApprove({ payerID }, { restart });
+            //
+            // });
         }).catch(err => {
-            getLogger().warn('approve_order_error', { err: stringifyError(err) }).flush();
+            console.log('wallet_pwb_start_error: ', err);
+            getLogger().warn('wallet_pwb_start_error', { err: stringifyError(err) }).flush();
             return fallbackToWebCheckout();
         });
     };

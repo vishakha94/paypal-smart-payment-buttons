@@ -89,15 +89,20 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
             }
 
             if (spinner) {
+                console.log('spinner enabled');
                 enableLoadingSpinner(button);
             }
 
             const updateClientConfigPromise = createOrder()
                 .then(orderID => {
+                    console.log('order id: ', orderID);
+                    
                     if (updateClientConfig) {
+                        console.log('update client config');
                         return updateClientConfig({ orderID, payment });
                     }
-
+    
+                    console.log('outside update client config');
                     // Do not block by default
                     updateButtonClientConfig({ orderID, fundingSource, inline });
                 }).catch(err => getLogger().error('update_client_config_error', { err: stringifyError(err) }));
@@ -110,10 +115,13 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
             const startPromise = ZalgoPromise.try(() => {
                 return updateClientConfigPromise;
             }).then(() => {
-                return start();
+                console.log('@@@@@@@@ start');
+                // return start();
             });
 
             const validateOrderPromise = createOrder().then(orderID => {
+                console.log('Validate Order');
+                // why validate order?
                 return validateOrder(orderID, { env, clientID, merchantID, expectedCurrency, expectedIntent, vault });
             });
 
@@ -122,6 +130,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
                 startPromise,
                 validateOrderPromise
             ]).catch(err => {
+                console.log('Error happened: ', err);
                 return ZalgoPromise.try(close).then(() => {
                     throw err;
                 });
@@ -129,6 +138,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
         });
 
     }).finally(() => {
+        console.log('finally disabling loading spinner');
         disableLoadingSpinner(button);
     });
 }
@@ -182,13 +192,13 @@ export function initiateMenuFlow({ payment, serviceData, config, components, pro
 
 export function initiateWalletFlow({ payment, serviceData, config, components, props } : InitiateMenuOptions) : ZalgoPromise<void> {
     return ZalgoPromise.try(() => {
-        const { fundingSource, button } = payment;
-        
-        const { name, setupWallet } = getPaymentFlow({ props, payment, config, components, serviceData });
-        
-        if (!setupWallet) {
-            throw new Error(`${ name } does not support wallet`);
-        }
+        // const { fundingSource, button } = payment;
+        //
+        // const { name, setupWallet } = getPaymentFlow({ props, payment, config, components, serviceData });
+        //
+        // if (!setupWallet) {
+        //     throw new Error(`${ name } does not support wallet`);
+        // }
         
         // Q: why is this logging for menu_click? Has it been clicked yet?
         // getLogger().info(`menu_click`).info(`pay_flow_${ name }`).track({
