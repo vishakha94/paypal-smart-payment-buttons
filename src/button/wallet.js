@@ -36,12 +36,17 @@ export function renderWallet({ props, payment, components, choices } : ButtonDro
     const { Wallet } = components;
     
     if (!clientID) {
-        throw new Error(`Can not render menu without client id`);
+        throw new Error(`Can not render wallet without client id`);
+    }
+    
+    if (!Wallet) {
+        throw new Error(`Can not render wallet without wallet component`)
     }
     
     smartWallet = smartWallet || renderSmartWallet({ clientID, Wallet });
     
     const verticalOffset = button.getBoundingClientRect().bottom;
+    console.log('vertical offset: ', verticalOffset);
     const loadingTimeout = setTimeout(() => enableLoadingSpinner(button), 50);
     
     

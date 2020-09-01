@@ -24,13 +24,13 @@ export function renderSmartWallet({ clientID, Wallet } : SmartMenuProps) : Smart
         return renderTo(window.xprops.getParent(), '#smart-wallet');
     });
     
-    const display = ({ verticalOffset, onFocus, onFocusFail }) => {
+    const display = ({ verticalOffset, onFocus /*, onFocusFail*/ }) => {
         return render().then(() => {
             return updateProps({
                 clientID,
                 verticalOffset,
-                onFocus,
-                onFocusFail
+                onFocus
+                // onFocusFail
             });
         }).then(() => {
             return show();
