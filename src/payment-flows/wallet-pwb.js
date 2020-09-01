@@ -34,8 +34,7 @@ function isWalletEligible({ props, serviceData } : IsEligibleOptions) : boolean 
 
 let smartWalletPromise;
 
-// Q: Why do we have this function?
-/*
+
 function setupWallet({ props, config, serviceData } : SetupOptions) {
     const { env, sessionID, clientID, currency, amount, userAccessToken, enablePWB, clientMetadataID: cmid } = props;
     const { cspNonce } = config;
@@ -54,7 +53,7 @@ function setupWallet({ props, config, serviceData } : SetupOptions) {
         smartWalletPromise = ZalgoPromise.resolve(wallet);
     }
 }
-*/
+
 
 function getInstrument(wallet : Wallet, fundingSource : $Values<typeof FUNDING>, instrumentID : string) : WalletInstrument {
     
@@ -228,7 +227,7 @@ const POPUP_OPTIONS = {
     height: CHECKOUT_POPUP_DIMENSIONS.HEIGHT
 };
 
-function setupWallet({ props, payment, serviceData, components, config } : MenuOptions) : MenuChoices {
+function setupPWBWallet({ props, payment, serviceData, components, config } : MenuOptions) : MenuChoices {
     const { createOrder } = props;
     const { fundingSource, instrumentID } = payment;
     const { wallet, content } = serviceData;
@@ -320,7 +319,7 @@ export const walletPWB : PaymentFlow = {
     isEligible:         isWalletEligible,
     isPaymentEligible:  isWalletPaymentEligible,
     init:               initWallet,
-    setupWallet:        setupWallet,
+    setupWallet:        setupPWBWallet,
     updateClientConfig: updateWalletClientConfig,
     spinner:            true,
     inline:             true

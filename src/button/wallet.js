@@ -21,13 +21,13 @@ let smartWallet;
 
 export function prerenderWallet({ props, components } : {| props : ButtonProps, components : Components |}) {
     const { clientID } = props;
-    const { Menu } = components;
+    const { Wallet } = components;
     
     if (!clientID) {
         return;
     }
     
-    smartWallet = smartWallet || renderSmartWallet({ clientID, Menu });
+    smartWallet = smartWallet || renderSmartWallet({ clientID, Wallet });
 }
 
 export function renderWallet({ props, payment, components, choices } : ButtonDropdownProps) : ZalgoPromise<void> {

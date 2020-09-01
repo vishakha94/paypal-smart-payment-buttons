@@ -145,7 +145,7 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
         });
     }
     
-    function initiateWallet() {
+    function initiateWallet({ payment }) {
         return ZalgoPromise.try(() => {
             if (paymentProcessing) {
                 return;
@@ -171,7 +171,7 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
     clearSmartWallet();
     
     getButtons().forEach(button => {
-        console.log('button: ', button);
+        // console.log('button: ', button);
         const menuToggle = getMenuButton(button);
         
         const pwb = getWalletButton(button);
@@ -180,6 +180,18 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
         const payment = { button, menuToggle, fundingSource: paymentFundingSource, card, paymentMethodID, instrumentID, instrumentType, isClick: true, buyerIntent: BUYER_INTENT.PAY };
 
         preventClickFocus(button);
+    
+        if (pwb) {
+            console.log('rendering pwb');
+            prerenderWallet({ props, components });
+    
+            const walletPromise = initiateWallet({ payment });
+    
+            // $FlowFixMe
+            // Q: why attaching promise to button?
+            button.walletPromise = walletPromise;
+        }
+        
         onElementClick(button, event => {
             event.preventDefault();
             event.stopPropagation();
@@ -204,22 +216,6 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
     
                 // $FlowFixMe
                 button.menuPromise = menuPromise;
-            });
-        }
-    
-        if (pwb) {
-               console.log('rendering pwb');
-               prerenderWallet({ props, components });
-        
-            onElementClick(pwb, (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-    
-                const walletPromise = initiateWallet({ payment });
-    
-                // $FlowFixMe
-                // Q: why attaching promise to button?
-                button.walletPromise = walletPromise;
             });
         }
     });
