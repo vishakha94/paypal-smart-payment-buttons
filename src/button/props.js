@@ -197,6 +197,7 @@ export function getProps({ facilitatorAccessToken } : {| facilitatorAccessToken 
         disableFunding,
         disableCard,
         enablePWB = false,
+        buyerAccessToken
     } = xprops;
 
     const upgradeLSATExperiment = createExperiment(UPGRADE_LSAT_RAMP.EXP_NAME, UPGRADE_LSAT_RAMP.RAMP);
@@ -260,6 +261,8 @@ export function getProps({ facilitatorAccessToken } : {| facilitatorAccessToken 
     const onShippingChange = getOnShippingChange({ onShippingChange: xprops.onShippingChange, partnerAttributionID }, { facilitatorAccessToken, createOrder });
     const onAuth = getOnAuth({ facilitatorAccessToken, createOrder, isLSATExperiment: upgradeLSATExperiment.isEnabled(), upgradeLSAT });
 
+    console.log('inside_getProps, buyer access token: ', buyerAccessToken);
+    
     return {
         env,
         style,
@@ -297,6 +300,7 @@ export function getProps({ facilitatorAccessToken } : {| facilitatorAccessToken 
         enableBNPL: enableBNPL || false,
         
         enablePWB: enablePWB || false,
+        buyerAccessToken,
 
         enableThreeDomainSecure,
         enableNativeCheckout,

@@ -87,6 +87,8 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
     let paymentProcessing = false;
 
     function initiatePayment({ payment, props: paymentProps } : {| props : ButtonProps, payment : Payment |}) : ZalgoPromise<void> {
+        console.log('inside_initiatePayment_function');
+    
         return ZalgoPromise.try(() => {
             if (paymentProcessing) {
                 return;
@@ -145,32 +147,32 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
         });
     }
     
-    function initiateWallet({ payment }) {
-        console.log('initiate wallet');
-        return ZalgoPromise.try(() => {
-            if (paymentProcessing) {
-                return;
-            }
-            
-            const abc = isEnabled();
-            console.log('is wallet enabled: ', abc);
-        
-            if (isEnabled()) {
-                console.log('calling initiate wallet flow');
-                return initiateWalletFlow({ payment, config, serviceData, components, props });
-            }
-        }).catch(err => {
-            console.log('initiate wallet error: ', err);
-            getLogger()
-                .info('smart_buttons_initiate_wallet_error', { err: stringifyError(err) })
-                .track({
-                    [FPTI_KEY.ERROR_CODE]: 'smart_buttons_initiate_wallet_error',
-                    [FPTI_KEY.ERROR_DESC]: stringifyErrorMessage(err)
-                });
-        
-            throw err;
-        });
-    }
+    // function initiateWallet({ payment }) {
+    //     console.log('initiate wallet');
+    //     return ZalgoPromise.try(() => {
+    //         if (paymentProcessing) {
+    //             return;
+    //         }
+    //
+    //         const abc = isEnabled();
+    //         console.log('is wallet enabled: ', abc);
+    //
+    //         if (isEnabled()) {
+    //             console.log('calling initiate wallet flow');
+    //             return initiateWalletFlow({ payment, config, serviceData, components, props });
+    //         }
+    //     }).catch(err => {
+    //         console.log('initiate wallet error: ', err);
+    //         getLogger()
+    //             .info('smart_buttons_initiate_wallet_error', { err: stringifyError(err) })
+    //             .track({
+    //                 [FPTI_KEY.ERROR_CODE]: 'smart_buttons_initiate_wallet_error',
+    //                 [FPTI_KEY.ERROR_DESC]: stringifyErrorMessage(err)
+    //             });
+    //
+    //         throw err;
+    //     });
+    // }
 
     clearSmartMenu();
     
@@ -189,8 +191,8 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
     
     
         if (pwb) {
-            console.log('prerendering pwb');
-            prerenderWallet({ props, components });
+            console.log('pwb condition true');
+            prerenderWallet({ props, components, serviceData });
         
             onElementClick(button, event => {
                 console.log('pwb clicked!');
@@ -203,14 +205,15 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
                 // $FlowFixMe
                 button.payPromise = payPromise;
             
-                const walletPromise = initiateWallet({ payment });
-                button.walletPromise = walletPromise;
+                // const walletPromise = initiateWallet({ payment });
+                // button.walletPromise = walletPromise;
             });
         } else {
             onElementClick(button, event => {
                 event.preventDefault();
                 event.stopPropagation();
         
+                // why call getProps again here?
                 const paymentProps = getProps({ facilitatorAccessToken });
                 const payPromise = initiatePayment({ payment, props: paymentProps });
         

@@ -17,21 +17,22 @@ type SmartMenu = {|
     hide : () => ZalgoPromise<void>
 |};
 
-export function renderSmartWallet({ clientID, Wallet } : SmartMenuProps) : SmartMenu {
-    console.log('render smart wallet');
-    const { renderTo, updateProps, show, hide } = Wallet({ clientID });
+export function renderSmartWallet({ createOrder, clientID, Wallet, serviceData } : SmartMenuProps) : SmartMenu {
+    console.log('inside_renderSmartWallet_function');
+    const { wallet } = serviceData;
+    
+    const { renderTo, updateProps, show, hide } = Wallet({ clientID, createOrder, wallet });
     
     const render = memoize(() => {
         return renderTo(window.xprops.getParent(), '#smart-wallet');
     });
     
-    const display = ({ verticalOffset, onFocus, onFocusFail }) => {
+    const display = ({ verticalOffset, buyerAccessToken }) => {
+        console.log('inside display, buyer access token: ', buyerAccessToken);
         return render().then(() => {
             return updateProps({
-                clientID,
                 verticalOffset,
-                onFocus,
-                onFocusFail
+                buyerAccessToken
             });
         }).then(() => {
             return show();
@@ -41,6 +42,14 @@ export function renderSmartWallet({ clientID, Wallet } : SmartMenuProps) : Smart
     // why double hide?
     hide();
     render().then(() => {
+    //     console.log('inside render, buyer access token: ', buyerAccessToken);
+    //     console.log('inside render, wallet: ', wallet);
+    //
+    //     // update prop after render, will that make it available after render finishes?
+    //     return updateProps({
+    //         clientID
+    //     });
+    // }).then(() => {
         console.log('rendered, now going to hide');
         return hide;
     });

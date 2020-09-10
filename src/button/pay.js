@@ -38,9 +38,11 @@ export function setupPaymentFlows({ props, config, serviceData, components } : {
 }
 
 export function getPaymentFlow({ props, payment, config, serviceData } : {| props : ButtonProps, payment : Payment, config : Config, components : Components, serviceData : ServiceData |}) : PaymentFlow {
+    console.log('inside_getPaymentFlow_function');
+    
     for (const flow of PAYMENT_FLOWS) {
         if (flow.isEligible({ props, config, serviceData }) && flow.isPaymentEligible({ props, payment, config, serviceData })) {
-            console.log('Flow: ', flow, 'is eligible');
+            console.log('Eligible Flow: ', flow.name);
             return flow;
         }
     }
@@ -57,6 +59,8 @@ type InitiatePaymentOptions = {|
 |};
 
 export function initiatePaymentFlow({ payment, serviceData, config, components, props } : InitiatePaymentOptions) : ZalgoPromise<void> {
+    console.log('inside_initiatePaymentFlow_function');
+    
     const { button, fundingSource, instrumentType } = payment;
 
     return ZalgoPromise.try(() => {
@@ -89,7 +93,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
             }
 
             if (spinner) {
-                console.log('spinner enabled');
+                console.log('spinner enabled via initiate payment flow');
                 enableLoadingSpinner(button);
             }
 
@@ -116,7 +120,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
                 return updateClientConfigPromise;
             }).then(() => {
                 console.log('@@@@@@@@ start');
-                // return start();
+                return start();
             });
 
             const validateOrderPromise = createOrder().then(orderID => {
@@ -130,7 +134,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
                 startPromise,
                 validateOrderPromise
             ]).catch(err => {
-                console.log('Error happened: ', err);
+                console.log('error_initaite_payment_flow: ', err);
                 return ZalgoPromise.try(close).then(() => {
                     throw err;
                 });
@@ -192,40 +196,6 @@ export function initiateMenuFlow({ payment, serviceData, config, components, pro
 
 export function initiateWalletFlow({ payment, serviceData, config, components, props } : InitiateMenuOptions) : ZalgoPromise<void> {
     return ZalgoPromise.try(() => {
-        // const { fundingSource, button } = payment;
-        //
-        // const { name, setupWallet } = getPaymentFlow({ props, payment, config, components, serviceData });
-        //
-        // if (!setupWallet) {
-        //     throw new Error(`${ name } does not support wallet`);
-        // }
-        
-        // Q: why is this logging for menu_click? Has it been clicked yet?
-        // getLogger().info(`menu_click`).info(`pay_flow_${ name }`).track({
-        //     [FPTI_KEY.TRANSITION]:     FPTI_TRANSITION.MENU_CLICK,
-        //     [FPTI_KEY.CHOSEN_FUNDING]: fundingSource,
-        //     [FPTI_KEY.PAYMENT_FLOW]:   name
-        // }).flush();
-        
-        // const choices = setupWallet({ props, payment, serviceData, components, config }).map(choice => {
-        //     return {
-        //         ...choice,
-        //         onSelect: (...args) => {
-        //             if (choice.spinner) {
-        //                 enableLoadingSpinner(button);
-        //             }
-        //
-        //             return ZalgoPromise.try(() => {
-        //                 return choice.onSelect(...args);
-        //             }).then(() => {
-        //                 if (choice.spinner) {
-        //                     disableLoadingSpinner(button);
-        //                 }
-        //             });
-        //         }
-        //     };
-        // });
-        
         return renderWallet({ props, payment, components });
     });
 }

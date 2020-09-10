@@ -1,13 +1,14 @@
 /* @flow */
 
 import { ZalgoPromise } from 'zalgo-promise/src';
-import { stringifyError } from 'belter/src';
+import { memoize, stringifyError } from 'belter/src';
 import { FUNDING, WALLET_INSTRUMENT, FPTI_KEY } from '@paypal/sdk-constants/src';
 
 import type { MenuChoices, Wallet, WalletInstrument } from '../types';
 import { getSupplementalOrderInfo, oneClickApproveOrder, loadFraudnet, getSmartWallet, updateButtonClientConfig } from '../api';
 import { BUYER_INTENT, FPTI_TRANSITION } from '../constants';
 import { getLogger } from '../lib';
+import { renderWallet } from '../button/wallet';
 
 import type { PaymentFlow, PaymentFlowInstance, SetupOptions, IsEligibleOptions, IsPaymentEligibleOptions, InitOptions, MenuOptions, Payment } from './types';
 import { checkout, CHECKOUT_POPUP_DIMENSIONS } from './checkout';
@@ -108,10 +109,16 @@ function isWalletPaymentEligible({ serviceData, payment } : IsPaymentEligibleOpt
 }
 
 function initWallet({ props, components, payment, serviceData, config } : InitOptions) : PaymentFlowInstance {
+    // Zoid component: Wallet instance
     const { Wallet } = components;
+    
+    // Props passed to Buttons
     const { createOrder, onApprove, clientMetadataID } = props;
+    
     const { fundingSource, instrumentID } = payment;
-    const { wallet } = serviceData;
+    const { wallet, buyerAccessToken } = serviceData;
+    
+    let forceClosed = false;
     
     if (!wallet || !smartWalletPromise) {
         throw new Error(`No smart wallet found`);
@@ -177,47 +184,127 @@ function initWallet({ props, components, payment, serviceData, config } : InitOp
         });
     };
     
-    const start = () => {
-        return ZalgoPromise.hash({
-            orderID:     createOrder()
-            // smartWallet: smartWalletPromise
-        }).then(({ orderID /*, smartWallet */ }) => {
-            // const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
-            
-            // if (!buyerAccessToken) {
-            //     throw new Error(`No access token available for instrument`);
-            // }
-            
-            
-            
-            const instrumentType = instrument.type;
-            if (!instrumentType) {
-                throw new Error(`Instrument has no type`);
+    // const start = () => {
+    //     return ZalgoPromise.hash({
+    //         orderID:     createOrder()
+    //         // smartWallet: smartWalletPromise
+    //     }).then(({ orderID /*, smartWallet */ }) => {
+    //         // const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
+    //
+    //         // if (!buyerAccessToken) {
+    //         //     throw new Error(`No access token available for instrument`);
+    //         // }
+    //
+    //
+    //
+    //         const instrumentType = instrument.type;
+    //         if (!instrumentType) {
+    //             throw new Error(`Instrument has no type`);
+    //         }
+    //
+    //         // return ZalgoPromise.hash({
+    //         //     requireShipping: shippingRequired(orderID)
+    //         //     // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
+    //         // }).then(({ requireShipping/*, orderApproval*/ }) => {
+    //         //     if (requireShipping) {
+    //         //         console.log('requires shipping');
+    //         //         return fallbackToWebCheckout();
+    //         //     }
+    //         //
+    //         //     // const { payerID } = orderApproval;
+    //         //     // return onApprove({ payerID }, { restart });
+    //         //
+    //         // });
+    //     }).catch(err => {
+    //         console.log('wallet_pwb_start_error: ', err);
+    //         getLogger().warn('wallet_pwb_start_error', { err: stringifyError(err) }).flush();
+    //         return fallbackToWebCheckout();
+    //     });
+    // };
+    
+    // *********************************************************New start, close
+    
+    // const init = () => {
+    //     return Wallet({
+    //         // window: win,
+    //         // sessionID,
+    //         // buttonSessionID,
+    //         // clientAccessToken,
+    //
+    //         createOrder: () => {
+    //             return createOrder().then(orderID => {
+    //                     return orderID;
+    //             });
+    //         },
+    //
+    //         // onApprove: ({ payerID, paymentID, billingToken, subscriptionID, authCode }) => {
+    //         //     approved = true;
+    //         //     getLogger().info(`spb_onapprove_access_token_${ buyerAccessToken ? 'present' : 'not_present' }`).flush();
+    //         //
+    //         //     // eslint-disable-next-line no-use-before-define
+    //         //     return close().then(() => {
+    //         //         const restart = memoize(() : ZalgoPromise<void> =>
+    //         //             initCheckout({ props, components, serviceData, config, payment: { button, fundingSource, card, buyerIntent, isClick: false } })
+    //         //                 .start().finally(unresolvedPromise));
+    //         //
+    //         //         return onApprove({ payerID, paymentID, billingToken, subscriptionID, buyerAccessToken, authCode }, { restart }).catch(noop);
+    //         //     });
+    //         // },
+    //         //
+    //         // onAuth: ({ accessToken }) => {
+    //         //
+    //         //     const access_token = accessToken ? accessToken : buyerAccessToken;
+    //         //
+    //         //     return onAuth({ accessToken: access_token }).then(token => {
+    //         //         buyerAccessToken = token;
+    //         //     });
+    //         // },
+    //         //
+    //         // onCancel: () => {
+    //         //     // eslint-disable-next-line no-use-before-define
+    //         //     return close().then(() => {
+    //         //         return onCancel();
+    //         //     });
+    //         // },
+    //         //
+    //         // onClose: () => {
+    //         //     checkoutOpen = false;
+    //         //     if (!forceClosed && !approved) {
+    //         //         return onCancel();
+    //         //     }
+    //         // },
+    //
+    //         fundingSource,
+    //         instrumentID,
+    //         // card,
+    //         // buyerCountry,
+    //         // locale,
+    //         // commit,
+    //         // cspNonce,
+    //         clientMetadataID
+    //     });
+    // };
+    
+    let instance;
+    
+    const close = () => {
+        return ZalgoPromise.try(() => {
+            if (instance) {
+                forceClosed = true;
+                return instance.close();
             }
-            
-            // return ZalgoPromise.hash({
-            //     requireShipping: shippingRequired(orderID)
-            //     // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
-            // }).then(({ requireShipping/*, orderApproval*/ }) => {
-            //     if (requireShipping) {
-            //         console.log('requires shipping');
-            //         return fallbackToWebCheckout();
-            //     }
-            //
-            //     // const { payerID } = orderApproval;
-            //     // return onApprove({ payerID }, { restart });
-            //
-            // });
-        }).catch(err => {
-            console.log('wallet_pwb_start_error: ', err);
-            getLogger().warn('wallet_pwb_start_error', { err: stringifyError(err) }).flush();
-            return fallbackToWebCheckout();
+        });
+    };
+    
+    const start = () => {
+        return ZalgoPromise.try(() => {
+            return renderWallet({ props, payment, Wallet, serviceData });
         });
     };
     
     return {
         start,
-        close: () => ZalgoPromise.resolve()
+        close // : () => ZalgoPromise.resolve()
     };
 }
 

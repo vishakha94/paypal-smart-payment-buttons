@@ -19,57 +19,57 @@ type ButtonDropdownProps = {|
 let smartWallet;
 
 
-export function prerenderWallet({ props, components } : {| props : ButtonProps, components : Components |}) {
-    const { clientID } = props;
+export function prerenderWallet({ props, components, serviceData } : {| props : ButtonProps, components : Components |}) {
+    console.log('inside_prerenderWallet_function');
+    const { clientID, createOrder } = props;
     const { Wallet } = components;
+    
     
     if (!clientID) {
         return;
     }
     
-    smartWallet = smartWallet || renderSmartWallet({ clientID, Wallet });
+    if (!createOrder) {
+        console.log('Not prerendering wallet');
+        return;
+    }
+    
+    smartWallet = smartWallet || renderSmartWallet({ createOrder, clientID, Wallet, serviceData });
 }
 
-export function renderWallet({ props, payment, components } : ButtonDropdownProps) : ZalgoPromise<void> {
-    const { clientID } = props;
-    const { button } = payment;
-    const { Wallet } = components;
+export function renderWallet({ props, payment, Wallet, serviceData } : ButtonDropdownProps) : ZalgoPromise<void> {
+    console.log('inside_renderWallet_function');
+    
+    const { clientID, createOrder, onApprove, clientMetadataID } = props;
+    const { button, fundingSource, instrumentID } = payment;
+    const { buyerAccessToken } = serviceData;
     
     if (!clientID) {
         throw new Error(`Can not render wallet without client id`);
+    }
+    
+    if (!createOrder) {
+        throw new Error(`Can not render wallet without createOrder`);
     }
     
     if (!Wallet) {
         throw new Error(`Can not render wallet without wallet component`)
     }
     
-    smartWallet = smartWallet || renderSmartWallet({ clientID, Wallet });
+    smartWallet = smartWallet || renderSmartWallet({ clientID, createOrder, Wallet, serviceData });
     
-    const verticalOffset = button.getBoundingClientRect().bottom;
+    let verticalOffset = button.getBoundingClientRect().bottom;
     console.log('vertical offset: ', verticalOffset);
+    
+    if (verticalOffset) {
+        verticalOffset = verticalOffset.toString();
+    }
+    
     const loadingTimeout = setTimeout(() => enableLoadingSpinner(button), 50);
     
-    
-    
-    // const onFocusFail = () => {
-    //     if (menuToggle) {
-    //         const blur = () => {
-    //             menuToggle.removeEventListener('blur', blur);
-    //             if (smartMenu) {
-    //                 smartMenu.hide();
-    //             }
-    //         };
-    //
-    //         menuToggle.addEventListener('blur', blur);
-    //     }
-    // };
-    
-    
-    console.log('inside render wallet');
     return smartWallet.display({
-        clientID,
-        verticalOffset
-        // onFocusFail
+        verticalOffset,
+        buyerAccessToken
     }).then(() => {
         disableLoadingSpinner(button);
     }).finally(() => {
