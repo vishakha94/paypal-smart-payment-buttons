@@ -19,7 +19,7 @@ type ButtonDropdownProps = {|
 let smartWallet;
 
 
-export function prerenderWallet({ props, components, serviceData } : {| props : ButtonProps, components : Components |}) {
+export function prerenderWallet({ props, components, serviceData, orderPromise } : {| props : ButtonProps, components : Components |}) {
     console.log('inside_prerenderWallet_function');
     const { clientID, createOrder } = props;
     const { Wallet } = components;
@@ -29,15 +29,16 @@ export function prerenderWallet({ props, components, serviceData } : {| props : 
         return;
     }
     
-    if (!createOrder) {
-        console.log('Not prerendering wallet');
+    if (!orderPromise) {
+        console.warn('Needed orderPromise to prerender wallet');
         return;
     }
     
-    smartWallet = smartWallet || renderSmartWallet({ createOrder, clientID, Wallet, serviceData });
+    smartWallet = smartWallet || renderSmartWallet({ createOrder, clientID, Wallet, serviceData, orderPromise });
 }
 
-export function renderWallet({ props, payment, Wallet, serviceData } : ButtonDropdownProps) : ZalgoPromise<void> {
+// this function is called after button click
+export function renderWallet({ props, payment, Wallet, serviceData, orderPromise } : ButtonDropdownProps) : ZalgoPromise<void> {
     console.log('inside_renderWallet_function');
     
     const { clientID, createOrder, onApprove, clientMetadataID } = props;
@@ -56,7 +57,7 @@ export function renderWallet({ props, payment, Wallet, serviceData } : ButtonDro
         throw new Error(`Can not render wallet without wallet component`)
     }
     
-    smartWallet = smartWallet || renderSmartWallet({ clientID, createOrder, Wallet, serviceData });
+    smartWallet = smartWallet || renderSmartWallet({ clientID, createOrder, Wallet, serviceData, orderPromise });
     
     let verticalOffset = button.getBoundingClientRect().bottom;
     console.log('vertical offset: ', verticalOffset);

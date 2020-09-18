@@ -17,11 +17,11 @@ type SmartMenu = {|
     hide : () => ZalgoPromise<void>
 |};
 
-export function renderSmartWallet({ createOrder, clientID, Wallet, serviceData } : SmartMenuProps) : SmartMenu {
+export function renderSmartWallet({ createOrder, clientID, Wallet, serviceData, orderPromise } : SmartMenuProps) : SmartMenu {
     console.log('inside_renderSmartWallet_function');
     const { wallet } = serviceData;
     
-    const { renderTo, updateProps, show, hide } = Wallet({ clientID, createOrder, wallet });
+    const { renderTo, updateProps, show, hide } = Wallet({ clientID, createOrder: () => { return orderPromise; }, wallet });
     
     const render = memoize(() => {
         return renderTo(window.xprops.getParent(), '#smart-wallet');

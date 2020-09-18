@@ -37,6 +37,7 @@ let smartWalletPromise;
 
 
 function setupWallet({ props, config, serviceData } : SetupOptions) {
+    console.log('inside_setupWallet_function');
     const { env, sessionID, clientID, currency, amount, userAccessToken, enablePWB, clientMetadataID: cmid } = props;
     const { cspNonce } = config;
     const { merchantID, wallet } = serviceData;
@@ -51,6 +52,7 @@ function setupWallet({ props, config, serviceData } : SetupOptions) {
             throw err;
         });
     } else if (wallet) {
+        console.log('&&&&&&&&&&&&&&');
         smartWalletPromise = ZalgoPromise.resolve(wallet);
     }
 }
@@ -108,7 +110,7 @@ function isWalletPaymentEligible({ serviceData, payment } : IsPaymentEligibleOpt
     return true;
 }
 
-function initWallet({ props, components, payment, serviceData, config } : InitOptions) : PaymentFlowInstance {
+function initWallet({ props, components, payment, serviceData, config, orderPromise } : InitOptions) : PaymentFlowInstance {
     // Zoid component: Wallet instance
     const { Wallet } = components;
     
@@ -129,6 +131,8 @@ function initWallet({ props, components, payment, serviceData, config } : InitOp
     }
     
     const instrument = getInstrument(wallet, fundingSource, instrumentID);
+    
+    
     
     const getWebCheckoutFallback = () => {
         return checkout.init({
@@ -184,43 +188,51 @@ function initWallet({ props, components, payment, serviceData, config } : InitOp
         });
     };
     
-    // const start = () => {
-    //     return ZalgoPromise.hash({
-    //         orderID:     createOrder()
-    //         // smartWallet: smartWalletPromise
-    //     }).then(({ orderID /*, smartWallet */ }) => {
-    //         // const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
-    //
-    //         // if (!buyerAccessToken) {
-    //         //     throw new Error(`No access token available for instrument`);
-    //         // }
-    //
-    //
-    //
-    //         const instrumentType = instrument.type;
-    //         if (!instrumentType) {
-    //             throw new Error(`Instrument has no type`);
-    //         }
-    //
-    //         // return ZalgoPromise.hash({
-    //         //     requireShipping: shippingRequired(orderID)
-    //         //     // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
-    //         // }).then(({ requireShipping/*, orderApproval*/ }) => {
-    //         //     if (requireShipping) {
-    //         //         console.log('requires shipping');
-    //         //         return fallbackToWebCheckout();
-    //         //     }
-    //         //
-    //         //     // const { payerID } = orderApproval;
-    //         //     // return onApprove({ payerID }, { restart });
-    //         //
-    //         // });
-    //     }).catch(err => {
-    //         console.log('wallet_pwb_start_error: ', err);
-    //         getLogger().warn('wallet_pwb_start_error', { err: stringifyError(err) }).flush();
-    //         return fallbackToWebCheckout();
-    //     });
-    // };
+    const start = () => {
+        return ZalgoPromise.try(() => {
+            
+            renderWallet({ props, payment, Wallet, serviceData, orderPromise });
+            
+            return ZalgoPromise.hash({
+                orderID:     createOrder()
+                // smartWallet: smartWalletPromise
+            }).then(({ orderID /* smartWallet */ }) => {
+                orderPromise.resolve = orderID;
+                // const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
+        
+                // if (!buyerAccessToken) {
+                //     throw new Error(`No access token available for instrument`);
+                // }
+        
+        
+        
+                // const instrumentType = instrument.type;
+                // if (!instrumentType) {
+                //     throw new Error(`Instrument has no type`);
+                // }
+        
+                return ZalgoPromise.try({
+                    requireShipping: shippingRequired(orderID)
+                    // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
+                }).then(({ requireShipping/*, orderApproval*/ }) => {
+                    if (requireShipping) {
+                        console.log('requires shipping');
+                        return fallbackToWebCheckout();
+                    }
+            
+                    // return renderWallet({ props, payment, Wallet, serviceData });
+            
+                    // const { payerID } = orderApproval;
+                    // return onApprove({ payerID }, { restart });
+            
+                });
+            }).catch(err => {
+                console.log('wallet_pwb_start_error: ', err);
+                getLogger().warn('wallet_pwb_start_error', { err: stringifyError(err) }).flush();
+                return fallbackToWebCheckout();
+            });
+        })
+    };
     
     // *********************************************************New start, close
     
@@ -296,13 +308,14 @@ function initWallet({ props, components, payment, serviceData, config } : InitOp
         });
     };
     
-    const start = () => {
-        return ZalgoPromise.try(() => {
-            return renderWallet({ props, payment, Wallet, serviceData });
-        });
-    };
+    // const click = () => {
+    //     return ZalgoPromise.try(() => {
+    //         return renderWallet({ props, payment, Wallet, serviceData });
+    //     });
+    // };
     
     return {
+        // click,
         start,
         close // : () => ZalgoPromise.resolve()
     };
@@ -405,7 +418,7 @@ export const walletPWB : PaymentFlow = {
     isEligible:         isWalletEligible,
     isPaymentEligible:  isWalletPaymentEligible,
     init:               initWallet,
-    setupWallet:        setupPWBWallet,
+    setupMenu:          setupPWBWallet,
     updateClientConfig: updateWalletClientConfig,
     spinner:            true,
     inline:             true

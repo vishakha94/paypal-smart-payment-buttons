@@ -86,7 +86,7 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
 
     let paymentProcessing = false;
 
-    function initiatePayment({ payment, props: paymentProps } : {| props : ButtonProps, payment : Payment |}) : ZalgoPromise<void> {
+    function initiatePayment({ payment, props: paymentProps, orderPromise } : {| props : ButtonProps, payment : Payment |}) : ZalgoPromise<void> {
         console.log('inside_initiatePayment_function');
     
         return ZalgoPromise.try(() => {
@@ -105,7 +105,7 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
                 paymentProcessing = true;
                 console.log('calling initiate payment flow');
 
-                return initiatePaymentFlow({ payment, config, serviceData, components, props: paymentProps }).finally(() => {
+                return initiatePaymentFlow({ payment, config, serviceData, components, props: paymentProps, orderPromise }).finally(() => {
                     paymentProcessing = false;
                 });
             } else  {
@@ -192,7 +192,8 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
     
         if (pwb) {
             console.log('pwb condition true');
-            prerenderWallet({ props, components, serviceData });
+            const orderPromise = new ZalgoPromise();
+            prerenderWallet({ props, components, serviceData, orderPromise });
         
             onElementClick(button, event => {
                 console.log('pwb clicked!');
@@ -200,7 +201,7 @@ export function setupButton(opts : ButtonOpts) : ZalgoPromise<void> {
                 event.stopPropagation();
             
                 const paymentProps = getProps({ facilitatorAccessToken });
-                const payPromise = initiatePayment({ payment, props: paymentProps });
+                const payPromise = initiatePayment({ payment, props: paymentProps, orderPromise });
             
                 // $FlowFixMe
                 button.payPromise = payPromise;

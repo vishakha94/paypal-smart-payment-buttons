@@ -58,7 +58,7 @@ type InitiatePaymentOptions = {|
     components : Components
 |};
 
-export function initiatePaymentFlow({ payment, serviceData, config, components, props } : InitiatePaymentOptions) : ZalgoPromise<void> {
+export function initiatePaymentFlow({ payment, serviceData, config, components, props, orderPromise } : InitiatePaymentOptions) : ZalgoPromise<void> {
     console.log('inside_initiatePaymentFlow_function');
     
     const { button, fundingSource, instrumentType } = payment;
@@ -68,7 +68,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
         const { clientID, onClick, createOrder, env, vault } = props;
 
         const { name, init, inline, spinner, updateClientConfig } = getPaymentFlow({ props, payment, config, components, serviceData });
-        const { click = promiseNoop, start, close } = init({ props, config, serviceData, components, payment });
+        const { click = promiseNoop, start, close } = init({ props, config, serviceData, components, payment, orderPromise });
 
         const clickPromise = ZalgoPromise.try(click);
         clickPromise.catch(noop);
