@@ -211,21 +211,21 @@ function initWallet({ props, components, payment, serviceData, config, orderProm
                 //     throw new Error(`Instrument has no type`);
                 // }
         
-                return ZalgoPromise.try({
-                    requireShipping: shippingRequired(orderID)
-                    // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
-                }).then(({ requireShipping/*, orderApproval*/ }) => {
-                    if (requireShipping) {
-                        console.log('requires shipping');
-                        return fallbackToWebCheckout();
-                    }
-            
-                    // return renderWallet({ props, payment, Wallet, serviceData });
-            
-                    // const { payerID } = orderApproval;
-                    // return onApprove({ payerID }, { restart });
-            
-                });
+                // return ZalgoPromise.try({
+                //     requireShipping: shippingRequired(orderID)
+                //     // orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
+                // }).then(({ requireShipping/*, orderApproval*/ }) => {
+                //     if (requireShipping) {
+                //         console.log('requires shipping');
+                //         return fallbackToWebCheckout();
+                //     }
+                //
+                //     // return renderWallet({ props, payment, Wallet, serviceData });
+                //
+                //     // const { payerID } = orderApproval;
+                //     // return onApprove({ payerID }, { restart });
+                //
+                // });
             }).catch(err => {
                 console.log('wallet_pwb_start_error: ', err);
                 getLogger().warn('wallet_pwb_start_error', { err: stringifyError(err) }).flush();
