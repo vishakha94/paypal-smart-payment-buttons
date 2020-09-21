@@ -19,20 +19,19 @@ type SmartMenu = {|
 
 export function renderSmartWallet({ createOrder, clientID, Wallet, serviceData, orderPromise } : SmartMenuProps) : SmartMenu {
     console.log('inside_renderSmartWallet_function');
-    const { wallet } = serviceData;
+    const { wallet, buyerAccessToken } = serviceData;
     
-    const { renderTo, updateProps, show, hide } = Wallet({ clientID, createOrder: () => { return orderPromise; }, wallet });
+    const { renderTo, updateProps, show, hide } = Wallet({ clientID, createOrder: () => { return orderPromise; }, wallet, buyerAccessToken });
     
     const render = memoize(() => {
         return renderTo(window.xprops.getParent(), '#smart-wallet');
     });
     
-    const display = ({ verticalOffset, buyerAccessToken }) => {
-        console.log('inside display, buyer access token: ', buyerAccessToken);
+    const display = ({ verticalOffset }) => {
+        // console.log('inside display, buyer access token: ', buyerAccessToken);
         return render().then(() => {
             return updateProps({
-                verticalOffset,
-                buyerAccessToken
+                verticalOffset
             });
         }).then(() => {
             return show();

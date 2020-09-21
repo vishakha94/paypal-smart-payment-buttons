@@ -69,8 +69,7 @@ export function renderWallet({ props, payment, Wallet, serviceData, orderPromise
     const loadingTimeout = setTimeout(() => enableLoadingSpinner(button), 50);
     
     return smartWallet.display({
-        verticalOffset,
-        buyerAccessToken
+        verticalOffset
     }).then(() => {
         disableLoadingSpinner(button);
     }).finally(() => {
