@@ -197,7 +197,7 @@ function initWallet({ props, components, payment, serviceData, config, orderProm
                 orderID:     createOrder()
                 // smartWallet: smartWalletPromise
             }).then(({ orderID /* smartWallet */ }) => {
-                orderPromise.resolve = orderID;
+                orderPromise.resolve(orderID);
                 // const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
         
                 // if (!buyerAccessToken) {
