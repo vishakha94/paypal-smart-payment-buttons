@@ -21,7 +21,7 @@ let smartWallet;
 
 export function prerenderWallet({ props, components, serviceData, orderPromise } : {| props : ButtonProps, components : Components |}) {
     console.log('inside_prerenderWallet_function');
-    const { clientID, createOrder } = props;
+    const { clientID, createOrder, onApprove } = props;
     const { Wallet } = components;
     
     
@@ -34,7 +34,7 @@ export function prerenderWallet({ props, components, serviceData, orderPromise }
         return;
     }
     
-    smartWallet = smartWallet || renderSmartWallet({ createOrder, clientID, Wallet, serviceData, orderPromise });
+    smartWallet = smartWallet || renderSmartWallet({ createOrder, clientID, Wallet, serviceData, orderPromise, onApprove });
 }
 
 // this function is called after button click
@@ -57,7 +57,7 @@ export function renderWallet({ props, payment, Wallet, serviceData, orderPromise
         throw new Error(`Can not render wallet without wallet component`)
     }
     
-    smartWallet = smartWallet || renderSmartWallet({ clientID, createOrder, Wallet, serviceData, orderPromise });
+    smartWallet = smartWallet || renderSmartWallet({ clientID, createOrder, Wallet, serviceData, orderPromise, onApprove });
     
     let verticalOffset = button.getBoundingClientRect().bottom;
     console.log('vertical offset: ', verticalOffset);

@@ -17,18 +17,17 @@ type SmartMenu = {|
     hide : () => ZalgoPromise<void>
 |};
 
-export function renderSmartWallet({ createOrder, clientID, Wallet, serviceData, orderPromise } : SmartMenuProps) : SmartMenu {
+export function renderSmartWallet({ createOrder, clientID, Wallet, serviceData, orderPromise, onApprove } : SmartMenuProps) : SmartMenu {
     console.log('inside_renderSmartWallet_function');
     const { wallet, buyerAccessToken } = serviceData;
     
-    const { renderTo, updateProps, show, hide } = Wallet({ clientID, createOrder: () => { return orderPromise; }, wallet, buyerAccessToken });
+    const { renderTo, updateProps, show, hide } = Wallet({ clientID, createOrder: () => { return orderPromise; }, wallet, buyerAccessToken, onApprove });
     
     const render = memoize(() => {
         return renderTo(window.xprops.getParent(), '#smart-wallet');
     });
     
     const display = ({ verticalOffset }) => {
-        // console.log('inside display, buyer access token: ', buyerAccessToken);
         return render().then(() => {
             return updateProps({
                 verticalOffset
