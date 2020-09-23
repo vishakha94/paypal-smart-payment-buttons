@@ -177,7 +177,6 @@ function initWallet({ props, components, payment, serviceData, config, orderProm
     
     const shippingRequired = (orderID) => {
         return getSupplementalOrderInfo(orderID).then(order => {
-            console.log('the order is: ', order);
             const { flags: { isChangeShippingAddressAllowed } } = order.checkoutSession;
             
             if (isChangeShippingAddressAllowed) {
@@ -191,7 +190,7 @@ function initWallet({ props, components, payment, serviceData, config, orderProm
     const start = () => {
         return ZalgoPromise.try(() => {
             
-            renderWallet({ props, payment, Wallet, serviceData, orderPromise });
+            // renderWallet({ props, payment, Wallet, serviceData, orderPromise });
             
             return ZalgoPromise.hash({
                 orderID:     createOrder()
@@ -308,14 +307,14 @@ function initWallet({ props, components, payment, serviceData, config, orderProm
         });
     };
     
-    // const click = () => {
-    //     return ZalgoPromise.try(() => {
-    //         return renderWallet({ props, payment, Wallet, serviceData });
-    //     });
-    // };
+    const click = () => {
+        return ZalgoPromise.try(() => {
+            return renderWallet({ props, payment, Wallet, serviceData, orderPromise });
+        });
+    };
     
     return {
-        // click,
+        click,
         start,
         close // : () => ZalgoPromise.resolve()
     };
