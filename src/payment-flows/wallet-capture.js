@@ -123,7 +123,7 @@ function initWalletCapture({ props, components, payment, serviceData, config } :
         if (!smartWalletPromise) {
             return ZalgoPromise.resolve();
         }
-                    
+
         return smartWalletPromise.then(smartWallet => {
             const smartInstrument = getInstrument(smartWallet, fundingSource, instrumentID);
 
@@ -191,7 +191,7 @@ function initWalletCapture({ props, components, payment, serviceData, config } :
             if (!instrumentType) {
                 throw new Error(`Instrument has no type`);
             }
-            
+
             return ZalgoPromise.hash({
                 requireShipping: shippingRequired(orderID),
                 orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID })
@@ -202,7 +202,7 @@ function initWalletCapture({ props, components, payment, serviceData, config } :
 
                 const { payerID } = orderApproval;
                 return onApprove({ payerID }, { restart });
-                
+
             });
         }).catch(err => {
             getLogger().warn('approve_order_error', { err: stringifyError(err) }).flush();
@@ -318,7 +318,7 @@ function setupWalletMenu({ props, payment, serviceData, components, config } : M
             CHOOSE_ACCOUNT
         ];
     }
-    
+
     throw new Error(`Can not render menu for ${ fundingSource }`);
 }
 

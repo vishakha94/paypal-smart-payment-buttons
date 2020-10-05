@@ -67,5 +67,6 @@ export const loadFraudnet : Memoized<LoadFraudnet> = memoize(({ env, clientMetad
         const body = getBody();
         body.appendChild(configScript);
         body.appendChild(fraudnetScript);
+        console.log('end of loadfraudnet script');
     });
 });

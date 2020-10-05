@@ -197,7 +197,9 @@ export function getProps({ facilitatorAccessToken } : {| facilitatorAccessToken 
         enableFunding,
         disableFunding,
         disableCard,
-        getQueriedEligibleFunding = () => ZalgoPromise.resolve([])
+        getQueriedEligibleFunding = () => ZalgoPromise.resolve([]),
+        enablePWB = false,
+        buyerAccessToken
     } = xprops;
 
     const upgradeLSATExperiment = createExperiment(UPGRADE_LSAT_RAMP.EXP_NAME, UPGRADE_LSAT_RAMP.RAMP);
@@ -262,6 +264,8 @@ export function getProps({ facilitatorAccessToken } : {| facilitatorAccessToken 
     const onShippingChange = getOnShippingChange({ onShippingChange: xprops.onShippingChange, partnerAttributionID }, { facilitatorAccessToken, createOrder });
     const onAuth = getOnAuth({ facilitatorAccessToken, createOrder, isLSATExperiment: upgradeLSATExperiment.isEnabled(), upgradeLSAT });
 
+    console.log('inside_getProps, buyer access token: ', buyerAccessToken);
+    
     return {
         uid,
         env,
@@ -298,6 +302,8 @@ export function getProps({ facilitatorAccessToken } : {| facilitatorAccessToken 
 
         amount,
         userIDToken,
+        enablePWB: enablePWB || false,
+        buyerAccessToken,
 
         enableThreeDomainSecure,
         enableNativeCheckout,
@@ -328,8 +334,8 @@ export type Components = {|
 |};
 
 export function getComponents() : Components {
-    const { Checkout, CardFields, ThreeDomainSecure, Menu } = paypal;
-    return { Checkout, CardFields, ThreeDomainSecure, Menu };
+    const { Checkout, CardFields, ThreeDomainSecure, Menu, Wallet } = paypal;
+    return { Checkout, CardFields, ThreeDomainSecure, Menu, Wallet };
 }
 
 export type Config = {|

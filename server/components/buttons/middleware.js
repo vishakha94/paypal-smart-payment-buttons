@@ -46,13 +46,14 @@ type ButtonMiddlewareOptions = {|
 export function getButtonMiddleware({ logger = defaultLogger, content: smartContent, graphQL, getAccessToken, getMerchantID, cache, getInlineGuestExperiment = () => Promise.resolve(false), firebaseConfig, tracking } : ButtonMiddlewareOptions = {}) : ExpressMiddleware {
     return sdkMiddleware({ logger, cache }, {
         app: async ({ req, res, params, meta, logBuffer, sdkMeta }) => {
+            console.log('Alias: spb server side');
             logger.info(req, EVENT.RENDER);
             
             tracking(req);
 
             const { env, clientID, buttonSessionID, cspNonce, debug, buyerCountry, disableFunding, disableCard, userIDToken, amount,
                 merchantID: sdkMerchantID, currency, intent, commit, vault, clientAccessToken, basicFundingEligibility, locale,
-                clientMetadataID, pageSessionID, correlationID, cookies, enableFunding } = getParams(params, req, res);
+                clientMetadataID, pageSessionID, correlationID, cookies, enableFunding, enablePWB, buyerAccessToken } = getParams(params, req, res);
             
             logger.info(req, `button_params`, { params: JSON.stringify(params) });
 
@@ -82,8 +83,9 @@ export function getButtonMiddleware({ logger = defaultLogger, content: smartCont
 
             const walletPromise = resolveWallet(req, gqlBatch, {
                 logger, clientID, merchantID: sdkMerchantID, buttonSessionID, currency, intent, commit, vault, amount,
-                disableFunding, disableCard, clientAccessToken, buyerCountry, userIDToken
+                disableFunding, disableCard, clientAccessToken, buyerCountry, userIDToken, buyerAccessToken, enablePWB
             }).catch(noop);
+
 
             gqlBatch.flush();
 
@@ -115,8 +117,9 @@ export function getButtonMiddleware({ logger = defaultLogger, content: smartCont
 
             const buttonProps = {
                 ...params, nonce: cspNonce, csp: { nonce: cspNonce },
-                fundingEligibility, content, wallet
+                fundingEligibility, content, wallet, enablePWB
             };
+            console.log('Alias: The button props are: ', buttonProps);
 
             try {
                 if (render.button.validateButtonProps) {

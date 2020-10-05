@@ -4,7 +4,8 @@ import { noop, stringifyError } from 'belter/src';
 import { ZalgoPromise } from 'zalgo-promise/src';
 import { FPTI_KEY } from '@paypal/sdk-constants/src';
 
-import { checkout, cardFields, native, honey, vaultCapture, walletCapture, popupBridge, type Payment, type PaymentFlow } from '../payment-flows';
+
+import { checkout, cardFields, native, honey, vaultCapture, walletCapture, walletPWB, popupBridge, type Payment, type PaymentFlow } from '../payment-flows';
 import { getLogger, promiseNoop } from '../lib';
 import { FPTI_TRANSITION } from '../constants';
 import { updateButtonClientConfig } from '../api';
@@ -14,11 +15,14 @@ import { type ButtonProps, type Config, type ServiceData, type Components } from
 import { enableLoadingSpinner, disableLoadingSpinner } from './dom';
 import { validateOrder } from './validation';
 import { showButtonSmartMenu } from './menu';
+import { renderWallet } from './wallet';
 
+import { renderSmartWallet } from '../wallet/interface';
 
 const PAYMENT_FLOWS : $ReadOnlyArray<PaymentFlow> = [
     vaultCapture,
     walletCapture,
+    walletPWB,
     cardFields,
     popupBridge,
     native,
@@ -35,8 +39,11 @@ export function setupPaymentFlows({ props, config, serviceData, components } : {
 }
 
 export function getPaymentFlow({ props, payment, config, serviceData } : {| props : ButtonProps, payment : Payment, config : Config, components : Components, serviceData : ServiceData |}) : PaymentFlow {
+    console.log('inside_getPaymentFlow_function');
+    
     for (const flow of PAYMENT_FLOWS) {
         if (flow.isEligible({ props, config, serviceData }) && flow.isPaymentEligible({ props, payment, config, serviceData })) {
+            console.log('Eligible Flow: ', flow.name);
             return flow;
         }
     }
@@ -53,7 +60,9 @@ type InitiatePaymentOptions = {|
     smartFields : ?SmartFields
 |};
 
-export function initiatePaymentFlow({ payment, serviceData, config, components, props, smartFields } : InitiatePaymentOptions) : ZalgoPromise<void> {
+export function initiatePaymentFlow({ payment, serviceData, config, components, props, smartFields, orderPromise } : InitiatePaymentOptions) : ZalgoPromise<void> {
+    console.log('inside_initiatePaymentFlow_function');
+
     const { button, fundingSource, instrumentType } = payment;
 
     return ZalgoPromise.try(() => {
@@ -61,7 +70,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
         const { clientID, onClick, createOrder, env, vault } = props;
 
         const { name, init, inline, spinner, updateFlowClientConfig } = getPaymentFlow({ props, payment, config, components, serviceData });
-        const { click = promiseNoop, start, close } = init({ props, config, serviceData, components, payment });
+        const { click = promiseNoop, start, close } = init({ props, config, serviceData, components, payment, orderPromise });
 
         const clickPromise = ZalgoPromise.try(click);
         clickPromise.catch(noop);
@@ -86,6 +95,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
             }
 
             if (spinner) {
+                console.log('spinner enabled via initiate payment flow');
                 enableLoadingSpinner(button);
             }
 
@@ -93,8 +103,11 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
                 .then(orderID => {
                     if (updateFlowClientConfig) {
                         return updateFlowClientConfig({ orderID, payment });
-                    }
 
+                    console.log('order id: ', orderID);
+                    }
+    
+                    console.log('outside update client config');
                     // Do not block by default
                     updateButtonClientConfig({ orderID, fundingSource, inline }).catch(err => {
                         getLogger().error('update_client_config_error', { err: stringifyError(err) });
@@ -106,10 +119,13 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
             const startPromise = ZalgoPromise.try(() => {
                 return updateClientConfigPromise;
             }).then(() => {
+                console.log('@@@@@@@@ start');
                 return start();
             });
 
             const validateOrderPromise = createOrder().then(orderID => {
+                console.log('Validate Order');
+                // why validate order?
                 return validateOrder(orderID, { env, clientID, merchantID, intent, currency, vault });
             });
 
@@ -121,6 +137,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
                 validateOrderPromise,
                 confirmOrderPromise
             ]).catch(err => {
+                console.log('error_initaite_payment_flow: ', err);
                 return ZalgoPromise.try(close).then(() => {
                     throw err;
                 });
@@ -128,6 +145,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
         });
 
     }).finally(() => {
+        console.log('finally disabling loading spinner');
         disableLoadingSpinner(button);
     });
 }
@@ -176,5 +194,11 @@ export function initiateMenuFlow({ payment, serviceData, config, components, pro
         });
 
         return showButtonSmartMenu({ props, payment, components, choices });
+    });
+}
+
+export function initiateWalletFlow({ payment, serviceData, config, components, props } : InitiateMenuOptions) : ZalgoPromise<void> {
+    return ZalgoPromise.try(() => {
+        return renderWallet({ props, payment, components });
     });
 }

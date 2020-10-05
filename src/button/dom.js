@@ -27,6 +27,24 @@ export function getMenuButton(button : HTMLElement) : ?HTMLElement {
     }
 }
 
+export function getWalletButton(button : HTMLElement) : ?HTMLElement {
+    let pwb = button.querySelector(`[${ DATA_ATTRIBUTES.INSTRUMENT_ID }]`);
+    
+    if (pwb) {
+        return pwb;
+    }
+    
+    const parent = button.parentNode;
+    if (parent) {
+        // $FlowFixMe
+        pwb = parent.querySelector(`[${ DATA_ATTRIBUTES.INSTRUMENT_ID }]`);
+    }
+    
+    if (pwb) {
+        return pwb;
+    }
+}
+
 export function getSelectedFunding(button : HTMLElement) : {| fundingSource : $Values<typeof FUNDING>, card : $Values<typeof CARD>, paymentMethodID : ?string, instrumentID : ?string, instrumentType : ?$Values<typeof WALLET_INSTRUMENT> |} {
     const fundingSource = button.getAttribute(DATA_ATTRIBUTES.FUNDING_SOURCE);
     const paymentMethodID = button.getAttribute(DATA_ATTRIBUTES.PAYMENT_METHOD_ID);
